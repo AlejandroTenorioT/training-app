@@ -3,14 +3,42 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import os
+import sys
+import traceback
+from dotenv import load_dotenv
+import urllib.parse
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'clave-secreta-12345'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gym.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-secreta-12345')
+app.config['DEBUG'] = True  # Activar modo debug
+
+# Configuración de la base de datos
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'gym.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ECHO'] = True  # Mostrar queries SQL
+
+# Inicializar la base de datos
 db = SQLAlchemy(app)
+
+# Configurar el sistema de login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# Manejo de errores
+@app.errorhandler(500)
+def internal_error(error):
+    print(f"Error 500: {error}", file=sys.stderr)
+    traceback.print_exc()
+    return render_template('error.html', error=str(error)), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('error.html', error="Página no encontrada"), 404
 
 # Modelos
 usuario_rutina = db.Table('usuario_rutina',
@@ -58,6 +86,48 @@ class ProgresoEjercicio(db.Model):
     usuario = db.relationship('Usuario', backref=db.backref('progresos', lazy=True))
 
     __table_args__ = (db.UniqueConstraint('usuario_id', 'ejercicio_id', name='uix_usuario_ejercicio'),)
+
+# Crear las tablas y datos iniciales
+def init_db():
+    with app.app_context():
+        # Eliminar la base de datos existente
+        db_path = os.path.join(basedir, 'gym.db')
+        if os.path.exists(db_path):
+            os.remove(db_path)
+            print("🗑️ Base de datos anterior eliminada")
+        
+        # Crear todas las tablas
+        db.create_all()
+        print("✅ Tablas creadas correctamente")
+        
+        # Crear usuario administrador
+        admin = Usuario(
+            email='admin@example.com',
+            nombre='Administrador',
+            password=generate_password_hash('admin123', method='pbkdf2:sha256'),
+            tipo_usuario='entrenador'
+        )
+        db.session.add(admin)
+        
+        # Crear usuario normal
+        usuario = Usuario(
+            email='usuario@example.com',
+            nombre='Usuario Normal',
+            password=generate_password_hash('usuario123', method='pbkdf2:sha256'),
+            tipo_usuario='usuario'
+        )
+        db.session.add(usuario)
+        
+        # Guardar cambios
+        try:
+            db.session.commit()
+            print("✅ Usuarios iniciales creados correctamente")
+        except Exception as e:
+            print(f"❌ Error al crear usuarios iniciales: {str(e)}")
+            db.session.rollback()
+
+# Inicializar la base de datos
+init_db()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -113,7 +183,7 @@ def registro():
         nuevo_usuario = Usuario(
             email=email,
             nombre=nombre,
-            password=generate_password_hash(password, method='scrypt'),
+            password=generate_password_hash(password, method='pbkdf2:sha256'),
             tipo_usuario=tipo_usuario
         )
 
@@ -351,10 +421,6 @@ def marcar_ejercicio(ejercicio_id):
     return redirect(url_for('ver_rutina', rutina_id=ejercicio.rutina_id))
 
 if __name__ == '__main__':
-    with app.app_context():
-        # Eliminar todas las tablas existentes
-        db.drop_all()
-        # Crear todas las tablas
-        db.create_all()
-        print("✅ Base de datos creada correctamente")
-    app.run(debug=True)
+    # Obtener el puerto del entorno o usar 5000 por defecto
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

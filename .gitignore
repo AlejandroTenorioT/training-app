@@ -1,4 +1,4 @@
-# Archivos de Python
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -20,25 +20,27 @@ var/
 .installed.cfg
 *.egg
 
-# Entornos virtuales
+# Virtual Environment
 venv/
 ENV/
-env/
+.venv/
 
-# Base de datos
+# Environment Variables
+.env
+
+# Database
 *.db
 *.sqlite3
 
-# Archivos de configuración local
-instance/
-.env
-
-# Archivos de IDE
+# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Archivos de sistema
+# OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Logs
+*.log 

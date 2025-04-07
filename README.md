@@ -1,92 +1,94 @@
-# Training App - Aplicación de Gestión de Rutinas de Ejercicios
+# Training App
 
-Una aplicación web para gestionar rutinas de ejercicios, permitiendo a los entrenadores crear y asignar rutinas a usuarios, y a los usuarios realizar un seguimiento de su progreso.
+Aplicación web para gestión de rutinas de entrenamiento desarrollada con Flask.
 
 ## Características
 
-- Sistema de autenticación para usuarios y entrenadores
-- Creación y gestión de rutinas de ejercicios
-- Asignación de rutinas a usuarios
-- Seguimiento del progreso de los usuarios
-- Interfaz intuitiva y responsiva
-- Gráficos de progreso y estadísticas
+- Sistema de autenticación de usuarios
+- Gestión de rutinas de entrenamiento
+- Seguimiento de ejercicios
+- Panel de administración
+- Interfaz responsiva
 
 ## Requisitos
 
-- Python 3.8 o superior
+- Python 3.9+
 - pip (gestor de paquetes de Python)
 
-## Instalación
+## Instalación local
 
-1. Clona el repositorio:
-   ```
-   git clone https://github.com/tu-usuario/training-app.git
-   cd training-app
-   ```
+1. Clonar el repositorio:
+```bash
+git clone <url-del-repositorio>
+cd training-app
+```
 
-2. Crea un entorno virtual e actívalo:
-   ```
-   python -m venv venv
-   # En Windows
-   venv\Scripts\activate
-   # En macOS/Linux
-   source venv/bin/activate
-   ```
+2. Crear un entorno virtual:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+```
 
-3. Instala las dependencias:
-   ```
-   pip install -r requirements.txt
-   ```
+3. Instalar dependencias:
+```bash
+pip install -r requirements.txt
+```
 
-4. Inicializa la base de datos:
+4. Configurar variables de entorno:
+```bash
+cp .env.example .env
+# Editar .env con tus configuraciones
+```
+
+5. Ejecutar la aplicación:
+```bash
+python trainingapp.py
+```
+
+## Despliegue en Render
+
+1. Crear una cuenta en [Render](https://render.com)
+2. Crear un nuevo Web Service
+3. Conectar con el repositorio de GitHub
+4. Configurar las siguientes variables de entorno:
+   - `SECRET_KEY`: Una clave secreta para la aplicación
+   - `DATABASE_URL`: URL de la base de datos (Render proporcionará una PostgreSQL)
+   - `FLASK_ENV`: production
+5. Configurar el comando de inicio:
    ```
-   python
-   >>> from trainingapp import db
-   >>> db.create_all()
-   >>> exit()
+   gunicorn trainingapp:app
    ```
+6. Deploy!
 
-## Ejecución
+## Usuarios por defecto
 
-1. Asegúrate de que el entorno virtual está activado.
+- Administrador:
+  - Email: admin@example.com
+  - Contraseña: admin123
+- Usuario normal:
+  - Email: usuario@example.com
+  - Contraseña: usuario123
 
-2. Ejecuta la aplicación:
-   ```
-   python trainingapp.py
-   ```
-
-3. Abre tu navegador y visita `http://localhost:5000`
-
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 training-app/
-├── trainingapp.py       # Aplicación principal
-├── static/              # Archivos estáticos (CSS, JS)
-│   └── styles.css       # Estilos CSS
-├── templates/           # Plantillas HTML
-│   ├── index.html       # Página principal
-│   ├── login.html       # Página de inicio de sesión
-│   ├── registro.html    # Página de registro
-│   ├── dashboard_admin.html  # Panel de administración
-│   ├── dashboard_usuario.html  # Panel de usuario
-│   ├── crear_rutina.html  # Formulario para crear rutinas
-│   ├── editar_rutina.html  # Formulario para editar rutinas
-│   ├── ver_rutina.html  # Vista de rutina
-│   ├── crear_ejercicio.html  # Formulario para crear ejercicios
-│   └── editar_ejercicio.html  # Formulario para editar ejercicios
-├── requirements.txt     # Dependencias del proyecto
-└── README.md           # Este archivo
+├── templates/          # Plantillas HTML
+├── static/            # Archivos estáticos (CSS, JS, imágenes)
+├── trainingapp.py     # Aplicación principal
+├── requirements.txt   # Dependencias
+├── .env              # Variables de entorno (no versionado)
+└── README.md         # Este archivo
 ```
 
-## Contribución
+## Contribuir
 
-1. Haz un fork del repositorio
-2. Crea una rama para tu característica (`git checkout -b feature/nueva-caracteristica`)
-3. Haz commit de tus cambios (`git commit -am 'Añadir nueva característica'`)
-4. Haz push a la rama (`git push origin feature/nueva-caracteristica`)
-5. Crea un Pull Request
+1. Fork el repositorio
+2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir un Pull Request
 
 ## Licencia
 
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles. 
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles. 
