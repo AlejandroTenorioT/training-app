@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Ejercicio - Gym App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Editar Ejercicio</h1>
+        <p>Rutina: {{ ejercicio.rutina.nombre }}</p>
+    </header>
+
+    <main>
+        <form action="{{ url_for('editar_ejercicio', ejercicio_id=ejercicio.id) }}" method="POST">
+            <div class="form-group">
+                <label for="nombre">Nombre del ejercicio:</label>
+                <input type="text" name="nombre" value="{{ ejercicio.nombre }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción:</label>
+                <textarea name="descripcion" required>{{ ejercicio.descripcion }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="series">Número de series:</label>
+                <input type="number" name="series" min="1" value="{{ ejercicio.series }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="repeticiones">Repeticiones por serie:</label>
+                <input type="number" name="repeticiones" min="1" value="{{ ejercicio.repeticiones }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tiempo_descanso">Tiempo de descanso (segundos):</label>
+                <input type="number" name="tiempo_descanso" min="0" value="{{ ejercicio.tiempo_descanso }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nivel_dificultad">Nivel de dificultad:</label>
+                <select name="nivel_dificultad" required>
+                    <option value="principiante" {% if ejercicio.nivel_dificultad == 'principiante' %}selected{% endif %}>Principiante</option>
+                    <option value="intermedio" {% if ejercicio.nivel_dificultad == 'intermedio' %}selected{% endif %}>Intermedio</option>
+                    <option value="avanzado" {% if ejercicio.nivel_dificultad == 'avanzado' %}selected{% endif %}>Avanzado</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="musculos_trabajados">Músculos trabajados:</label>
+                <input type="text" name="musculos_trabajados" value="{{ ejercicio.musculos_trabajados }}" placeholder="Ej: pectorales, tríceps, hombros" required>
+            </div>
+
+            <div class="form-group">
+                <label for="imagen_url">URL de la imagen (opcional):</label>
+                <input type="url" name="imagen_url" value="{{ ejercicio.imagen_url }}">
+            </div>
+
+            <div class="form-group">
+                <label for="video_url">URL del video (opcional):</label>
+                <input type="url" name="video_url" value="{{ ejercicio.video_url }}">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Guardar Cambios</button>
+                <a href="{{ url_for('ver_rutina', rutina_id=ejercicio.rutina_id) }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html> 

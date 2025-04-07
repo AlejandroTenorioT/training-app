@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ rutina.nombre }} - Gym App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>{{ rutina.nombre }}</h1>
+        <p class="descripcion">{{ rutina.descripcion }}</p>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <div class="navegacion">
+            <a href="{{ url_for('dashboard_usuario') }}" class="btn btn-secondary">
+                Volver al Dashboard
+            </a>
+        </div>
+
+        <div class="rutina-info">
+            <h2>Información de la Rutina</h2>
+            <div class="rutina-detalles">
+                <div class="detalle">
+                    <span class="etiqueta">Nombre:</span>
+                    <span class="valor">{{ rutina.nombre }}</span>
+                </div>
+                <div class="detalle">
+                    <span class="etiqueta">Descripción:</span>
+                    <span class="valor">{{ rutina.descripcion }}</span>
+                </div>
+                <div class="detalle">
+                    <span class="etiqueta">Total de ejercicios:</span>
+                    <span class="valor">{{ rutina.ejercicios|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="ejercicios-container">
+            {% if rutina.ejercicios %}
+                <div class="ejercicios-grid">
+                    {% for ejercicio in rutina.ejercicios %}
+                        <div class="ejercicio-card">
+                            {% if ejercicio.imagen_url %}
+                                <img src="{{ ejercicio.imagen_url }}" alt="{{ ejercicio.nombre }}" class="ejercicio-imagen">
+                            {% endif %}
+                            <div class="ejercicio-contenido">
+                                <h2>{{ ejercicio.nombre }}</h2>
+                                <p class="descripcion">{{ ejercicio.descripcion }}</p>
+                                <div class="ejercicio-detalles">
+                                    <div class="detalle">
+                                        <span class="etiqueta">Series:</span>
+                                        <span class="valor">{{ ejercicio.series }}</span>
+                                    </div>
+                                    <div class="detalle">
+                                        <span class="etiqueta">Repeticiones:</span>
+                                        <span class="valor">{{ ejercicio.repeticiones }}</span>
+                                    </div>
+                                    <div class="detalle">
+                                        <span class="etiqueta">Descanso:</span>
+                                        <span class="valor">{{ ejercicio.tiempo_descanso }}s</span>
+                                    </div>
+                                    <div class="detalle">
+                                        <span class="etiqueta">Nivel:</span>
+                                        <span class="valor">{{ ejercicio.nivel_dificultad }}</span>
+                                    </div>
+                                </div>
+                                <div class="musculos">
+                                    <span class="etiqueta">Músculos trabajados:</span>
+                                    <span class="valor">{{ ejercicio.musculos_trabajados }}</span>
+                                </div>
+                                {% if current_user.tipo_usuario != 'entrenador' %}
+                                    <div class="progreso-ejercicio">
+                                        <form action="{{ url_for('marcar_ejercicio', ejercicio_id=ejercicio.id) }}" method="POST" class="form-progreso">
+                                            <div class="estado-ejercicio">
+                                                <label class="checkbox-container">
+                                                    <input type="checkbox" name="completado" value="true" 
+                                                           {% if ejercicio.id in progresos and progresos[ejercicio.id].completado %}checked{% endif %}
+                                                           onchange="this.form.submit()">
+                                                    <span class="checkmark"></span>
+                                                    <span class="estado-texto">
+                                                        {% if ejercicio.id in progresos and progresos[ejercicio.id].completado %}
+                                                            Ejercicio completado
+                                                        {% else %}
+                                                            Marcar como completado
+                                                        {% endif %}
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="notas-ejercicio">
+                                                <textarea name="notas" placeholder="Agregar notas (opcional)">{{ progresos[ejercicio.id].notas if ejercicio.id in progresos else '' }}</textarea>
+                                                <button type="submit" class="btn btn-secondary">Guardar notas</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                                {% if ejercicio.video_url %}
+                                    <div class="video-container">
+                                        <h3>Tutorial del ejercicio</h3>
+                                        <div class="video-wrapper">
+                                            <iframe 
+                                                src="{{ ejercicio.video_url|replace('watch?v=', 'embed/') }}" 
+                                                frameborder="0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowfullscreen>
+                                            </iframe>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% if current_user.tipo_usuario == 'entrenador' %}
+                                    <div class="acciones-ejercicio">
+                                        <a href="{{ url_for('editar_ejercicio', ejercicio_id=ejercicio.id) }}" class="btn btn-secondary">
+                                            Editar ejercicio
+                                        </a>
+                                        <form action="{{ url_for('eliminar_ejercicio', ejercicio_id=ejercicio.id) }}" method="POST" class="form-eliminar">
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este ejercicio?')">
+                                                Eliminar ejercicio
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-ejercicios">
+                    <p>Esta rutina aún no tiene ejercicios asignados.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if current_user.tipo_usuario == 'entrenador' %}
+            <div class="acciones">
+                <a href="{{ url_for('crear_ejercicio', rutina_id=rutina.id) }}" class="btn btn-primary">
+                    Agregar ejercicio
+                </a>
+                <a href="{{ url_for('editar_rutina', rutina_id=rutina.id) }}" class="btn btn-secondary">
+                    Editar rutina
+                </a>
+                <a href="{{ url_for('dashboard_admin') }}" class="btn btn-success">
+                    Finalizar rutina
+                </a>
+                <form action="{{ url_for('eliminar_rutina', rutina_id=rutina.id) }}" method="POST" class="form-eliminar">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar esta rutina?')">
+                        Eliminar rutina
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html> 

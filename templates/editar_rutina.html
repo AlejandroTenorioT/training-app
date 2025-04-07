@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Gym App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Panel de Administración</h1>
+    </header>
+
+    <main>
+        <h2>Lista de usuarios</h2>
+        <ul>
+            {% for usuario in usuarios %}
+                <li>{{ usuario.nombre }} - {{ usuario.email }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Rutinas Asignadas</h2>
+        <ul>
+            {% for rutina in rutinas %}
+                <li>
+                    {{ rutina.nombre }} - {{ rutina.descripcion }} (Asignada a: {{ rutina.usuario.nombre }})
+                    <a href="{{ url_for('editar_rutina', rutina_id=rutina.id) }}">✏️ Editar</a>
+                    <form action="{{ url_for('eliminar_rutina', rutina_id=rutina.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" onclick="return confirm('¿Estás seguro de eliminar esta rutina?')">❌ Eliminar</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('crear_rutina') }}">➕ Crear Rutina</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+    </main>
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html>

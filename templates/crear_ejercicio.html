@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Ejercicio - {{ rutina.nombre }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Agregar Ejercicio a {{ rutina.nombre }}</h1>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('crear_ejercicio', rutina_id=rutina.id) }}" method="POST" class="form-ejercicio">
+            <div class="form-group">
+                <label for="nombre">Nombre del ejercicio:</label>
+                <input type="text" id="nombre" name="nombre" required>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" required></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="series">Series:</label>
+                    <input type="number" id="series" name="series" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="repeticiones">Repeticiones:</label>
+                    <input type="number" id="repeticiones" name="repeticiones" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tiempo_descanso">Tiempo de descanso (segundos):</label>
+                    <input type="number" id="tiempo_descanso" name="tiempo_descanso" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nivel_dificultad">Nivel de dificultad:</label>
+                <select id="nivel_dificultad" name="nivel_dificultad" required>
+                    <option value="">Selecciona un nivel</option>
+                    <option value="principiante">Principiante</option>
+                    <option value="intermedio">Intermedio</option>
+                    <option value="avanzado">Avanzado</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="musculos_trabajados">Músculos trabajados:</label>
+                <input type="text" id="musculos_trabajados" name="musculos_trabajados" 
+                       placeholder="Ej: pectorales, tríceps, hombros" required>
+            </div>
+
+            <div class="form-group">
+                <label for="imagen_url">URL de la imagen (opcional):</label>
+                <input type="url" id="imagen_url" name="imagen_url" 
+                       placeholder="https://ejemplo.com/imagen.jpg">
+            </div>
+
+            <div class="form-group">
+                <label for="video_url">URL del video tutorial (opcional):</label>
+                <input type="url" id="video_url" name="video_url" 
+                       placeholder="https://youtube.com/watch?v=...">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Agregar Ejercicio</button>
+                <a href="{{ url_for('ver_rutina', rutina_id=rutina.id) }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html> 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Usuario - Gym App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Bienvenido, {{ current_user.nombre }}</h1>
+    </header>
+
+    <main>
+        <h2>Tus Rutinas de Entrenamiento</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% if rutinas %}
+            <div class="rutinas-grid">
+                {% for rutina in rutinas %}
+                    <div class="rutina-card">
+                        <h3>{{ rutina.nombre }}</h3>
+                        <p class="descripcion">{{ rutina.descripcion }}</p>
+                        <div class="ejercicios-count">
+                            <p>Ejercicios: {{ rutina.ejercicios|length }}</p>
+                        </div>
+                        <div class="acciones">
+                            <a href="{{ url_for('ver_rutina', rutina_id=rutina.id) }}" class="btn">Ver Detalles</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-rutinas">No tienes rutinas asignadas todavía.</p>
+        {% endif %}
+
+        <div class="navegacion">
+            <a href="{{ url_for('logout') }}" class="btn">Cerrar Sesión</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html>

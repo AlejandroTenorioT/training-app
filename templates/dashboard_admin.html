@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Gym App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Panel de Administración</h1>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <div class="filtros-section">
+            <h2>Filtros</h2>
+            <div class="filtros-container">
+                <div class="filtro-grupo">
+                    <label for="filtro-progreso">Filtrar por progreso:</label>
+                    <select id="filtro-progreso" class="filtro-select">
+                        <option value="todos">Todos los usuarios</option>
+                        <option value="alto">Alto progreso (>75%)</option>
+                        <option value="medio">Progreso medio (25-75%)</option>
+                        <option value="bajo">Bajo progreso (<25%)</option>
+                    </select>
+                </div>
+                <div class="filtro-grupo">
+                    <label for="filtro-rutinas">Filtrar por rutinas:</label>
+                    <select id="filtro-rutinas" class="filtro-select">
+                        <option value="todos">Todas las rutinas</option>
+                        {% for rutina in rutinas %}
+                            <option value="{{ rutina.id }}">{{ rutina.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="estadisticas-section">
+            <h2>Estadísticas Generales</h2>
+            <div class="estadisticas-grid">
+                <div class="estadistica-card">
+                    <canvas id="grafico-progreso"></canvas>
+                </div>
+                <div class="estadistica-card">
+                    <canvas id="grafico-ejercicios"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="usuarios-section">
+            <h2>Usuarios y su Progreso</h2>
+            <div class="usuarios-grid">
+                {% for usuario in usuarios %}
+                    <div class="usuario-card" 
+                         data-progreso="{{ (progreso_usuarios[usuario.id].ejercicios_completados / progreso_usuarios[usuario.id].total_ejercicios * 100) if progreso_usuarios[usuario.id].total_ejercicios > 0 else 0 }}"
+                         data-rutinas="{{ usuario.rutinas|map(attribute='id')|list|tojson }}">
+                        <h3>{{ usuario.nombre }}</h3>
+                        <p class="email">{{ usuario.email }}</p>
+                        
+                        <div class="progreso-resumen">
+                            <div class="progreso-item">
+                                <span class="etiqueta">Total ejercicios:</span>
+                                <span class="valor">{{ progreso_usuarios[usuario.id].total_ejercicios }}</span>
+                            </div>
+                            <div class="progreso-item">
+                                <span class="etiqueta">Ejercicios completados:</span>
+                                <span class="valor">{{ progreso_usuarios[usuario.id].ejercicios_completados }}</span>
+                            </div>
+                            <div class="progreso-item">
+                                <span class="etiqueta">Progreso total:</span>
+                                <span class="valor">
+                                    {% if progreso_usuarios[usuario.id].total_ejercicios > 0 %}
+                                        {{ (progreso_usuarios[usuario.id].ejercicios_completados / progreso_usuarios[usuario.id].total_ejercicios * 100) | round }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="rutinas-usuario">
+                            <h4>Rutinas Asignadas</h4>
+                            {% if usuario.rutinas %}
+                                <ul class="rutinas-lista">
+                                    {% for rutina in usuario.rutinas %}
+                                        <li class="rutina-item">
+                                            <div class="rutina-info">
+                                                <span class="nombre">{{ rutina.nombre }}</span>
+                                                <span class="ejercicios-count">{{ rutina.ejercicios|length }} ejercicios</span>
+                                            </div>
+                                            <div class="rutina-acciones">
+                                                <a href="{{ url_for('ver_rutina', rutina_id=rutina.id) }}" class="btn btn-secondary">Ver Detalles</a>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="no-rutinas">No tiene rutinas asignadas</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="acciones-admin">
+            <a href="{{ url_for('crear_rutina') }}" class="btn btn-primary">Crear Nueva Rutina</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">Cerrar Sesión</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // Función para inicializar los gráficos
+        function inicializarGraficos() {
+            // Gráfico de progreso general
+            const ctxProgreso = document.getElementById('grafico-progreso').getContext('2d');
+            new Chart(ctxProgreso, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Alto progreso', 'Progreso medio', 'Bajo progreso'],
+                    datasets: [{
+                        data: [
+                            {{ estadisticas.alto_progreso }},
+                            {{ estadisticas.medio_progreso }},
+                            {{ estadisticas.bajo_progreso }}
+                        ],
+                        backgroundColor: ['#4CAF50', '#FFC107', '#F44336']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Distribución de Progreso'
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de ejercicios por rutina
+            const ctxEjercicios = document.getElementById('grafico-ejercicios').getContext('2d');
+            new Chart(ctxEjercicios, {
+                type: 'bar',
+                data: {
+                    labels: {{ rutinas|map(attribute='nombre')|list|tojson }},
+                    datasets: [{
+                        label: 'Ejercicios por rutina',
+                        data: {{ rutinas|map(attribute='ejercicios')|map('length')|list|tojson }},
+                        backgroundColor: '#2196F3'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Ejercicios por Rutina'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para filtrar usuarios
+        function filtrarUsuarios() {
+            const filtroProgreso = document.getElementById('filtro-progreso').value;
+            const filtroRutinas = document.getElementById('filtro-rutinas').value;
+            const usuarios = document.querySelectorAll('.usuario-card');
+
+            usuarios.forEach(usuario => {
+                const progreso = parseFloat(usuario.dataset.progreso);
+                const rutinas = JSON.parse(usuario.dataset.rutinas);
+                let mostrar = true;
+
+                // Filtrar por progreso
+                if (filtroProgreso !== 'todos') {
+                    if (filtroProgreso === 'alto' && progreso <= 75) mostrar = false;
+                    if (filtroProgreso === 'medio' && (progreso <= 25 || progreso > 75)) mostrar = false;
+                    if (filtroProgreso === 'bajo' && progreso > 25) mostrar = false;
+                }
+
+                // Filtrar por rutina
+                if (filtroRutinas !== 'todos' && !rutinas.includes(parseInt(filtroRutinas))) {
+                    mostrar = false;
+                }
+
+                usuario.style.display = mostrar ? 'block' : 'none';
+            });
+        }
+
+        // Inicializar cuando el documento esté listo
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarGraficos();
+            
+            // Agregar event listeners para los filtros
+            document.getElementById('filtro-progreso').addEventListener('change', filtrarUsuarios);
+            document.getElementById('filtro-rutinas').addEventListener('change', filtrarUsuarios);
+        });
+    </script>
+</body>
+</html>
