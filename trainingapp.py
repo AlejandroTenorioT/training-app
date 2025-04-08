@@ -108,7 +108,7 @@ def init_db():
                     nombre='Administrador',
                     email='admin@example.com',
                     password=generate_password_hash('admin123', method='pbkdf2:sha256'),
-                    es_admin=True
+                    tipo_usuario='entrenador'
                 )
                 db.session.add(admin)
                 
@@ -117,7 +117,7 @@ def init_db():
                     nombre='Usuario Normal',
                     email='usuario@example.com',
                     password=generate_password_hash('usuario123', method='pbkdf2:sha256'),
-                    es_admin=False
+                    tipo_usuario='usuario'
                 )
                 db.session.add(usuario)
                 
