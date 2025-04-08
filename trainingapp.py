@@ -8,6 +8,7 @@ import sys
 import traceback
 from dotenv import load_dotenv
 import urllib.parse
+from sqlalchemy import inspect
 
 load_dotenv()
 
@@ -89,42 +90,41 @@ class ProgresoEjercicio(db.Model):
 
 # Crear las tablas y datos iniciales
 def init_db():
+    """Inicializa la base de datos y crea usuarios por defecto si no existen"""
     with app.app_context():
-        # Eliminar la base de datos existente
-        db_path = os.path.join(basedir, 'gym.db')
-        if os.path.exists(db_path):
-            os.remove(db_path)
-            print("🗑️ Base de datos anterior eliminada")
+        # Verificar si las tablas ya existen
+        inspector = inspect(db.engine)
+        existing_tables = inspector.get_table_names()
         
-        # Crear todas las tablas
-        db.create_all()
-        print("✅ Tablas creadas correctamente")
-        
-        # Crear usuario administrador
-        admin = Usuario(
-            email='admin@example.com',
-            nombre='Administrador',
-            password=generate_password_hash('admin123', method='pbkdf2:sha256'),
-            tipo_usuario='entrenador'
-        )
-        db.session.add(admin)
-        
-        # Crear usuario normal
-        usuario = Usuario(
-            email='usuario@example.com',
-            nombre='Usuario Normal',
-            password=generate_password_hash('usuario123', method='pbkdf2:sha256'),
-            tipo_usuario='usuario'
-        )
-        db.session.add(usuario)
-        
-        # Guardar cambios
-        try:
-            db.session.commit()
-            print("✅ Usuarios iniciales creados correctamente")
-        except Exception as e:
-            print(f"❌ Error al crear usuarios iniciales: {str(e)}")
-            db.session.rollback()
+        if not existing_tables:
+            # Crear todas las tablas
+            db.create_all()
+            print("Tablas creadas exitosamente")
+            
+            # Crear usuarios por defecto solo si la tabla usuario está vacía
+            if Usuario.query.count() == 0:
+                # Crear usuario administrador
+                admin = Usuario(
+                    nombre='Administrador',
+                    email='admin@example.com',
+                    password=generate_password_hash('admin123', method='pbkdf2:sha256'),
+                    es_admin=True
+                )
+                db.session.add(admin)
+                
+                # Crear usuario normal
+                usuario = Usuario(
+                    nombre='Usuario Normal',
+                    email='usuario@example.com',
+                    password=generate_password_hash('usuario123', method='pbkdf2:sha256'),
+                    es_admin=False
+                )
+                db.session.add(usuario)
+                
+                db.session.commit()
+                print("Usuarios por defecto creados exitosamente")
+        else:
+            print("Las tablas ya existen, omitiendo creación")
 
 # Inicializar la base de datos
 init_db()
