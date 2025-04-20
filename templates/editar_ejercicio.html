@@ -19,33 +19,34 @@
                 <input type="text" name="nombre" value="{{ ejercicio.nombre }}" required>
             </div>
 
-            <div class="form-group">
-                <label for="descripcion">Descripción:</label>
-                <textarea name="descripcion" required>{{ ejercicio.descripcion }}</textarea>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="series">Número de series:</label>
+                    <input type="number" name="series" min="1" value="{{ ejercicio.series }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="repeticiones_objetivo">Repeticiones objetivo por serie:</label>
+                    <input type="number" name="repeticiones_objetivo" min="1" value="{{ ejercicio.repeticiones_objetivo }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="repeticiones_semanales">Repeticiones totales por semana:</label>
+                    <input type="number" name="repeticiones_semanales" min="1" value="{{ ejercicio.repeticiones_semanales }}" required>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="series">Número de series:</label>
-                <input type="number" name="series" min="1" value="{{ ejercicio.series }}" required>
-            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tiempo_descanso">Tiempo de descanso (minutos):</label>
+                    <input type="number" name="tiempo_descanso" min="0" value="{{ ejercicio.tiempo_descanso }}" required>
+                </div>
 
-            <div class="form-group">
-                <label for="repeticiones">Repeticiones por serie:</label>
-                <input type="number" name="repeticiones" min="1" value="{{ ejercicio.repeticiones }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="tiempo_descanso">Tiempo de descanso (segundos):</label>
-                <input type="number" name="tiempo_descanso" min="0" value="{{ ejercicio.tiempo_descanso }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="nivel_dificultad">Nivel de dificultad:</label>
-                <select name="nivel_dificultad" required>
-                    <option value="principiante" {% if ejercicio.nivel_dificultad == 'principiante' %}selected{% endif %}>Principiante</option>
-                    <option value="intermedio" {% if ejercicio.nivel_dificultad == 'intermedio' %}selected{% endif %}>Intermedio</option>
-                    <option value="avanzado" {% if ejercicio.nivel_dificultad == 'avanzado' %}selected{% endif %}>Avanzado</option>
-                </select>
+                <div class="form-group">
+                    <label for="rir">Reps In Reserve (RIR):</label>
+                    <input type="number" name="rir" min="0" max="5" value="{{ ejercicio.rir }}" required>
+                    <small>0 = fallo, 1 = 1 rep en reserva, etc.</small>
+                </div>
             </div>
 
             <div class="form-group">

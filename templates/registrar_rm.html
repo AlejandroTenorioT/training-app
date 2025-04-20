@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar RM - {{ ejercicio.nombre }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Registrar Repetición Máxima</h1>
+        <p>Ejercicio: {{ ejercicio.nombre }}</p>
+    </header>
+
+    <main>
+        <form action="{{ url_for('registrar_rm', ejercicio_id=ejercicio.id) }}" method="POST" class="form-rm">
+            <div class="form-group">
+                <label for="peso">Peso (kg):</label>
+                <input type="number" id="peso" name="peso" step="0.5" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="repeticiones">Número de repeticiones realizadas:</label>
+                <input type="number" id="repeticiones" name="repeticiones" min="1" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Registrar RM</button>
+                <a href="{{ url_for('ver_rutina', rutina_id=ejercicio.rutina_id) }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html> 

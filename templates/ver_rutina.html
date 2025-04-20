@@ -64,16 +64,20 @@
                                         <span class="valor">{{ ejercicio.series }}</span>
                                     </div>
                                     <div class="detalle">
-                                        <span class="etiqueta">Repeticiones:</span>
-                                        <span class="valor">{{ ejercicio.repeticiones }}</span>
+                                        <span class="etiqueta">Repeticiones objetivo:</span>
+                                        <span class="valor">{{ ejercicio.repeticiones_objetivo }}</span>
+                                    </div>
+                                    <div class="detalle">
+                                        <span class="etiqueta">Repeticiones semanales:</span>
+                                        <span class="valor">{{ ejercicio.repeticiones_semanales }}</span>
                                     </div>
                                     <div class="detalle">
                                         <span class="etiqueta">Descanso:</span>
-                                        <span class="valor">{{ ejercicio.tiempo_descanso }}s</span>
+                                        <span class="valor">{{ ejercicio.tiempo_descanso }} min</span>
                                     </div>
                                     <div class="detalle">
-                                        <span class="etiqueta">Nivel:</span>
-                                        <span class="valor">{{ ejercicio.nivel_dificultad }}</span>
+                                        <span class="etiqueta">RIR:</span>
+                                        <span class="valor">{{ ejercicio.rir }}</span>
                                     </div>
                                 </div>
                                 <div class="musculos">
@@ -98,11 +102,22 @@
                                                     </span>
                                                 </label>
                                             </div>
+                                            <div class="form-group">
+                                                <label for="repeticiones_realizadas">Repeticiones realizadas:</label>
+                                                <input type="number" name="repeticiones_realizadas" min="0" 
+                                                       value="{{ progresos[ejercicio.id].repeticiones_realizadas if ejercicio.id in progresos else '' }}"
+                                                       placeholder="¿Cuántas reps lograste?">
+                                            </div>
                                             <div class="notas-ejercicio">
                                                 <textarea name="notas" placeholder="Agregar notas (opcional)">{{ progresos[ejercicio.id].notas if ejercicio.id in progresos else '' }}</textarea>
-                                                <button type="submit" class="btn btn-secondary">Guardar notas</button>
+                                                <button type="submit" class="btn btn-secondary">Guardar progreso</button>
                                             </div>
                                         </form>
+                                        <div class="acciones-rm">
+                                            <a href="{{ url_for('registrar_rm', ejercicio_id=ejercicio.id) }}" class="btn btn-primary">
+                                                Registrar RM
+                                            </a>
+                                        </div>
                                     </div>
                                 {% endif %}
                                 {% if ejercicio.video_url %}

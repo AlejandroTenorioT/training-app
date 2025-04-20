@@ -53,6 +53,7 @@ class Usuario(UserMixin, db.Model):
     password = db.Column(db.String(100))
     nombre = db.Column(db.String(100))
     tipo_usuario = db.Column(db.String(20), nullable=False)
+    peso = db.Column(db.Float, nullable=True)  # Peso del usuario en kg
     rutinas = db.relationship('Rutina', secondary=usuario_rutina, backref=db.backref('usuarios', lazy='dynamic'))
 
 class Rutina(db.Model):
@@ -65,11 +66,11 @@ class Rutina(db.Model):
 class Ejercicio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100))
-    descripcion = db.Column(db.Text)
     series = db.Column(db.Integer)
-    repeticiones = db.Column(db.Integer)
-    tiempo_descanso = db.Column(db.Integer)  # en segundos
-    nivel_dificultad = db.Column(db.String(20))  # principiante, intermedio, avanzado
+    repeticiones_objetivo = db.Column(db.Integer)  # Repeticiones objetivo por serie
+    repeticiones_semanales = db.Column(db.Integer)  # Total de repeticiones por semana
+    tiempo_descanso = db.Column(db.Integer)  # en minutos
+    rir = db.Column(db.Integer)  # Reps In Reserve (0 = fallo, 1 = 1 rep en reserva, etc.)
     musculos_trabajados = db.Column(db.String(200))
     imagen_url = db.Column(db.String(500))
     video_url = db.Column(db.String(500))
@@ -83,10 +84,23 @@ class ProgresoEjercicio(db.Model):
     ejercicio_id = db.Column(db.Integer, db.ForeignKey('ejercicio.id'), nullable=False)
     completado = db.Column(db.Boolean, default=False)
     fecha_completado = db.Column(db.DateTime, nullable=True)
+    repeticiones_realizadas = db.Column(db.Integer, nullable=True)  # Repeticiones que el usuario logró realizar
     notas = db.Column(db.Text, nullable=True)
     usuario = db.relationship('Usuario', backref=db.backref('progresos', lazy=True))
 
     __table_args__ = (db.UniqueConstraint('usuario_id', 'ejercicio_id', name='uix_usuario_ejercicio'),)
+
+class RepeticionMaxima(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    ejercicio_id = db.Column(db.Integer, db.ForeignKey('ejercicio.id'), nullable=False)
+    peso = db.Column(db.Float, nullable=False)  # Peso en kg
+    repeticiones = db.Column(db.Integer, nullable=False)  # Número de repeticiones realizadas
+    fecha = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    usuario = db.relationship('Usuario', backref=db.backref('rms', lazy=True))
+    ejercicio = db.relationship('Ejercicio', backref=db.backref('rms', lazy=True))
+
+    __table_args__ = (db.UniqueConstraint('usuario_id', 'ejercicio_id', name='uix_usuario_ejercicio_rm'),)
 
 # Crear las tablas y datos iniciales
 def init_db():
@@ -320,11 +334,11 @@ def crear_ejercicio(rutina_id):
     if request.method == 'POST':
         nuevo_ejercicio = Ejercicio(
             nombre=request.form.get('nombre'),
-            descripcion=request.form.get('descripcion'),
             series=int(request.form.get('series')),
-            repeticiones=int(request.form.get('repeticiones')),
+            repeticiones_objetivo=int(request.form.get('repeticiones_objetivo')),
+            repeticiones_semanales=int(request.form.get('repeticiones_semanales')),
             tiempo_descanso=int(request.form.get('tiempo_descanso')),
-            nivel_dificultad=request.form.get('nivel_dificultad'),
+            rir=int(request.form.get('rir')),
             musculos_trabajados=request.form.get('musculos_trabajados'),
             imagen_url=request.form.get('imagen_url'),
             video_url=request.form.get('video_url'),
@@ -349,11 +363,11 @@ def editar_ejercicio(ejercicio_id):
     
     if request.method == 'POST':
         ejercicio.nombre = request.form.get('nombre')
-        ejercicio.descripcion = request.form.get('descripcion')
         ejercicio.series = int(request.form.get('series'))
-        ejercicio.repeticiones = int(request.form.get('repeticiones'))
+        ejercicio.repeticiones_objetivo = int(request.form.get('repeticiones_objetivo'))
+        ejercicio.repeticiones_semanales = int(request.form.get('repeticiones_semanales'))
         ejercicio.tiempo_descanso = int(request.form.get('tiempo_descanso'))
-        ejercicio.nivel_dificultad = request.form.get('nivel_dificultad')
+        ejercicio.rir = int(request.form.get('rir'))
         ejercicio.musculos_trabajados = request.form.get('musculos_trabajados')
         ejercicio.imagen_url = request.form.get('imagen_url')
         ejercicio.video_url = request.form.get('video_url')
@@ -419,6 +433,31 @@ def marcar_ejercicio(ejercicio_id):
         flash('Ejercicio marcado como no completado', 'info')
     
     return redirect(url_for('ver_rutina', rutina_id=ejercicio.rutina_id))
+
+@app.route('/registrar_rm/<int:ejercicio_id>', methods=['GET', 'POST'])
+@login_required
+def registrar_rm(ejercicio_id):
+    ejercicio = Ejercicio.query.get_or_404(ejercicio_id)
+    
+    if request.method == 'POST':
+        peso = float(request.form.get('peso'))
+        repeticiones = int(request.form.get('repeticiones'))
+        
+        # Crear nuevo registro de RM
+        nuevo_rm = RepeticionMaxima(
+            usuario_id=current_user.id,
+            ejercicio_id=ejercicio_id,
+            peso=peso,
+            repeticiones=repeticiones
+        )
+        
+        db.session.add(nuevo_rm)
+        db.session.commit()
+        
+        flash('RM registrado exitosamente', 'success')
+        return redirect(url_for('ver_rutina', rutina_id=ejercicio.rutina_id))
+    
+    return render_template('registrar_rm.html', ejercicio=ejercicio)
 
 if __name__ == '__main__':
     # Obtener el puerto del entorno o usar 5000 por defecto
