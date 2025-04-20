@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Rutina - Gym App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
@@ -14,44 +14,41 @@
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <ul class="flashes">
+                <div class="flashes">
                     {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
+                        <div class="{{ category }}">{{ message }}</div>
                     {% endfor %}
-                </ul>
+                </div>
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('crear_rutina') }}" method="POST" class="form-ejercicio">
-            <div class="form-group">
-                <label for="nombre">Nombre de la rutina:</label>
-                <input type="text" id="nombre" name="nombre" required>
-            </div>
+        <div class="admin-actions">
+            <a href="{{ url_for('gestionar_rutinas') }}" class="btn btn-secondary">Volver a Gestión de Rutinas</a>
+        </div>
 
-            <div class="form-group">
-                <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" required></textarea>
-            </div>
+        <div class="rutinas-section">
+            <h2>Nueva Rutina</h2>
+            <form action="{{ url_for('crear_rutina') }}" method="POST" class="form-ejercicio">
+                <div class="form-group">
+                    <label for="nombre">Nombre de la rutina:</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
 
-            <div class="form-group">
-                <label for="usuario_id">Asignar a usuario:</label>
-                <select id="usuario_id" name="usuario_id" required>
-                    <option value="">Selecciona un usuario</option>
-                    {% for usuario in usuarios %}
-                        <option value="{{ usuario.id }}">{{ usuario.nombre }} ({{ usuario.email }})</option>
-                    {% endfor %}
-                </select>
-            </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion" required></textarea>
+                </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Crear Rutina</button>
-                <a href="{{ url_for('dashboard_admin') }}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Crear Rutina</button>
+                    <a href="{{ url_for('gestionar_rutinas') }}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
     </main>
 
     <footer>
-        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+        <p>&copy; 2024 GymApp</p>
     </footer>
 </body>
 </html>

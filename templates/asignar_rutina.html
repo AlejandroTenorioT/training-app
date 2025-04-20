@@ -3,54 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asignar Rutina - {{ usuario.nombre }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Asignar Usuarios - {{ rutina.nombre }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
-        <h1>Asignar Rutina a {{ usuario.nombre }}</h1>
+        <h1>Asignar Usuarios a {{ rutina.nombre }}</h1>
     </header>
 
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <ul class="flashes">
+                <div class="flashes">
                     {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
+                        <div class="{{ category }}">{{ message }}</div>
                     {% endfor %}
-                </ul>
+                </div>
             {% endif %}
         {% endwith %}
 
-        <div class="navegacion">
-            <a href="{{ url_for('ver_perfil', usuario_id=usuario.id) }}" class="btn btn-secondary">
-                Volver al Perfil
-            </a>
+        <div class="admin-actions">
+            <a href="{{ url_for('gestionar_rutinas') }}" class="btn btn-secondary">Volver a Gestión de Rutinas</a>
         </div>
 
-        {% if rutinas %}
-            <form action="{{ url_for('asignar_rutina', usuario_id=usuario.id) }}" method="POST" class="form-asignar">
+        <div class="rutina-info">
+            <h2>Información de la Rutina</h2>
+            <p><strong>Nombre:</strong> {{ rutina.nombre }}</p>
+            <p><strong>Descripción:</strong> {{ rutina.descripcion }}</p>
+            <p><strong>Creador:</strong> {{ rutina.creador.nombre }}</p>
+        </div>
+
+        <div class="usuarios-asignados">
+            <h2>Usuarios Actualmente Asignados</h2>
+            {% if rutina.usuarios_asignados %}
+                <div class="usuarios-grid">
+                    {% for usuario in rutina.usuarios_asignados %}
+                        <div class="usuario-card">
+                            <h3>{{ usuario.nombre }}</h3>
+                            <p>{{ usuario.email }}</p>
+                            <div class="usuario-actions">
+                                <form action="{{ url_for('desasignar_rutina', rutina_id=rutina.id, usuario_id=usuario.id) }}" method="POST" class="delete-form">
+                                    <button type="submit" class="btn btn-danger">Desasignar</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No hay usuarios asignados a esta rutina.</p>
+            {% endif %}
+        </div>
+
+        <div class="asignar-nuevo">
+            <h2>Asignar Nuevo Usuario</h2>
+            <form action="{{ url_for('asignar_rutina', rutina_id=rutina.id) }}" method="POST" class="form-asignacion">
                 <div class="form-group">
-                    <label for="rutina_id">Seleccionar rutina:</label>
-                    <select id="rutina_id" name="rutina_id" required>
-                        <option value="">Selecciona una rutina</option>
-                        {% for rutina in rutinas %}
-                            <option value="{{ rutina.id }}">{{ rutina.nombre }}</option>
+                    <label for="usuario_id">Seleccionar Usuario:</label>
+                    <select name="usuario_id" id="usuario_id" required>
+                        <option value="">Selecciona un usuario</option>
+                        {% for usuario in usuarios %}
+                            {% if usuario not in rutina.usuarios_asignados %}
+                                <option value="{{ usuario.id }}">{{ usuario.nombre }} ({{ usuario.email }})</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>
-
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Asignar Rutina</button>
+                    <button type="submit" class="btn btn-primary">Asignar Usuario</button>
+                    <a href="{{ url_for('gestionar_rutinas') }}" class="btn btn-secondary">Cancelar</a>
                 </div>
             </form>
-        {% else %}
-            <p class="mensaje">No hay rutinas disponibles para asignar.</p>
-        {% endif %}
+        </div>
     </main>
 
     <footer>
-        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+        <p>&copy; 2024 GymApp</p>
     </footer>
 </body>
 </html> 

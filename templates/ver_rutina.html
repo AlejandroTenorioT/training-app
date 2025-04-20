@@ -4,50 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ rutina.nombre }} - Gym App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
         <h1>{{ rutina.nombre }}</h1>
-        <p class="descripcion">{{ rutina.descripcion }}</p>
     </header>
 
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <ul class="flashes">
+                <div class="flashes">
                     {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
+                        <div class="{{ category }}">{{ message }}</div>
                     {% endfor %}
-                </ul>
+                </div>
             {% endif %}
         {% endwith %}
 
-        <div class="navegacion">
-            <a href="{{ url_for('dashboard_usuario') }}" class="btn btn-secondary">
-                Volver al Dashboard
-            </a>
+        <div class="admin-actions">
+            <a href="{{ url_for('gestionar_rutinas') }}" class="btn btn-secondary">Volver a Gestión de Rutinas</a>
+            {% if current_user.tipo_usuario in ['admin', 'entrenador'] %}
+                <a href="{{ url_for('crear_ejercicio', rutina_id=rutina.id) }}" class="btn btn-primary">Agregar Ejercicio</a>
+            {% endif %}
         </div>
 
         <div class="rutina-info">
             <h2>Información de la Rutina</h2>
             <div class="rutina-detalles">
-                <div class="detalle">
-                    <span class="etiqueta">Nombre:</span>
-                    <span class="valor">{{ rutina.nombre }}</span>
-                </div>
-                <div class="detalle">
-                    <span class="etiqueta">Descripción:</span>
-                    <span class="valor">{{ rutina.descripcion }}</span>
-                </div>
-                <div class="detalle">
-                    <span class="etiqueta">Total de ejercicios:</span>
-                    <span class="valor">{{ rutina.ejercicios|length }}</span>
-                </div>
+                <p><strong>Nombre:</strong> {{ rutina.nombre }}</p>
+                <p><strong>Descripción:</strong> {{ rutina.descripcion }}</p>
+                <p><strong>Creada por:</strong> {{ rutina.creador.nombre }}</p>
+                <p><strong>Fecha de creación:</strong> {{ rutina.fecha_creacion.strftime('%d/%m/%Y') }}</p>
+                <p><strong>Total de ejercicios:</strong> {{ rutina.ejercicios|length }}</p>
             </div>
         </div>
 
-        <div class="ejercicios-container">
+        <div class="ejercicios-section">
+            <h2>Ejercicios de la Rutina</h2>
             {% if rutina.ejercicios %}
                 <div class="ejercicios-grid">
                     {% for ejercicio in rutina.ejercicios %}
@@ -56,35 +50,26 @@
                                 <img src="{{ ejercicio.imagen_url }}" alt="{{ ejercicio.nombre }}" class="ejercicio-imagen">
                             {% endif %}
                             <div class="ejercicio-contenido">
-                                <h2>{{ ejercicio.nombre }}</h2>
-                                <p class="descripcion">{{ ejercicio.descripcion }}</p>
+                                <h3>{{ ejercicio.nombre }}</h3>
                                 <div class="ejercicio-detalles">
-                                    <div class="detalle">
-                                        <span class="etiqueta">Series:</span>
-                                        <span class="valor">{{ ejercicio.series }}</span>
-                                    </div>
-                                    <div class="detalle">
-                                        <span class="etiqueta">Repeticiones objetivo:</span>
-                                        <span class="valor">{{ ejercicio.repeticiones_objetivo }}</span>
-                                    </div>
-                                    <div class="detalle">
-                                        <span class="etiqueta">Repeticiones semanales:</span>
-                                        <span class="valor">{{ ejercicio.repeticiones_semanales }}</span>
-                                    </div>
-                                    <div class="detalle">
-                                        <span class="etiqueta">Descanso:</span>
-                                        <span class="valor">{{ ejercicio.tiempo_descanso }} min</span>
-                                    </div>
-                                    <div class="detalle">
-                                        <span class="etiqueta">RIR:</span>
-                                        <span class="valor">{{ ejercicio.rir }}</span>
-                                    </div>
+                                    <p><strong>Series:</strong> {{ ejercicio.series }}</p>
+                                    <p><strong>Repeticiones objetivo:</strong> {{ ejercicio.repeticiones_objetivo }}</p>
+                                    <p><strong>Repeticiones semanales:</strong> {{ ejercicio.repeticiones_semanales }}</p>
+                                    <p><strong>Descanso:</strong> {{ ejercicio.tiempo_descanso }} min</p>
+                                    <p><strong>RIR:</strong> {{ ejercicio.rir }}</p>
+                                    <p><strong>Músculos trabajados:</strong> {{ ejercicio.musculos_trabajados }}</p>
                                 </div>
-                                <div class="musculos">
-                                    <span class="etiqueta">Músculos trabajados:</span>
-                                    <span class="valor">{{ ejercicio.musculos_trabajados }}</span>
-                                </div>
-                                {% if current_user.tipo_usuario != 'entrenador' %}
+                                
+                                {% if current_user.tipo_usuario in ['admin', 'entrenador'] %}
+                                    <div class="ejercicio-actions">
+                                        <a href="{{ url_for('editar_ejercicio', ejercicio_id=ejercicio.id) }}" class="btn btn-secondary">Editar</a>
+                                        <form action="{{ url_for('eliminar_ejercicio', ejercicio_id=ejercicio.id) }}" method="POST" class="delete-form">
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este ejercicio?')">Eliminar</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if current_user.tipo_usuario == 'usuario' %}
                                     <div class="progreso-ejercicio">
                                         <form action="{{ url_for('marcar_ejercicio', ejercicio_id=ejercicio.id) }}" method="POST" class="form-progreso">
                                             <div class="form-group">
@@ -93,21 +78,21 @@
                                                        value="{{ progresos[ejercicio.id].repeticiones_realizadas if ejercicio.id in progresos else '' }}"
                                                        placeholder="¿Cuántas reps lograste?" required>
                                             </div>
-                                            <div class="notas-ejercicio">
+                                            <div class="form-group">
+                                                <label for="notas">Notas:</label>
                                                 <textarea name="notas" placeholder="Agregar notas (opcional)">{{ progresos[ejercicio.id].notas if ejercicio.id in progresos else '' }}</textarea>
+                                            </div>
+                                            <div class="form-actions">
                                                 <button type="submit" class="btn btn-primary">Guardar progreso</button>
+                                                <a href="{{ url_for('registrar_rm', ejercicio_id=ejercicio.id) }}" class="btn btn-secondary">Registrar RM</a>
                                             </div>
                                         </form>
-                                        <div class="acciones-rm">
-                                            <a href="{{ url_for('registrar_rm', ejercicio_id=ejercicio.id) }}" class="btn btn-secondary">
-                                                Registrar RM
-                                            </a>
-                                        </div>
                                     </div>
                                 {% endif %}
+                                
                                 {% if ejercicio.video_url %}
                                     <div class="video-container">
-                                        <h3>Tutorial del ejercicio</h3>
+                                        <h4>Tutorial del ejercicio</h4>
                                         <div class="video-wrapper">
                                             <iframe 
                                                 src="{{ ejercicio.video_url|replace('watch?v=', 'embed/') }}" 
@@ -116,18 +101,6 @@
                                                 allowfullscreen>
                                             </iframe>
                                         </div>
-                                    </div>
-                                {% endif %}
-                                {% if current_user.tipo_usuario == 'entrenador' %}
-                                    <div class="acciones-ejercicio">
-                                        <a href="{{ url_for('editar_ejercicio', ejercicio_id=ejercicio.id) }}" class="btn btn-secondary">
-                                            Editar ejercicio
-                                        </a>
-                                        <form action="{{ url_for('eliminar_ejercicio', ejercicio_id=ejercicio.id) }}" method="POST" class="form-eliminar">
-                                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este ejercicio?')">
-                                                Eliminar ejercicio
-                                            </button>
-                                        </form>
                                     </div>
                                 {% endif %}
                             </div>
@@ -140,29 +113,10 @@
                 </div>
             {% endif %}
         </div>
-
-        {% if current_user.tipo_usuario == 'entrenador' %}
-            <div class="acciones">
-                <a href="{{ url_for('crear_ejercicio', rutina_id=rutina.id) }}" class="btn btn-primary">
-                    Agregar ejercicio
-                </a>
-                <a href="{{ url_for('editar_rutina', rutina_id=rutina.id) }}" class="btn btn-secondary">
-                    Editar rutina
-                </a>
-                <a href="{{ url_for('dashboard_admin') }}" class="btn btn-success">
-                    Finalizar rutina
-                </a>
-                <form action="{{ url_for('eliminar_rutina', rutina_id=rutina.id) }}" method="POST" class="form-eliminar">
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar esta rutina?')">
-                        Eliminar rutina
-                    </button>
-                </form>
-            </div>
-        {% endif %}
     </main>
 
     <footer>
-        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+        <p>&copy; 2024 GymApp</p>
     </footer>
 </body>
 </html> 

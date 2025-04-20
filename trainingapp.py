@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
@@ -13,17 +14,15 @@ from sqlalchemy import inspect
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-secreta-12345')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev')
 app.config['DEBUG'] = True  # Activar modo debug
-
-# Configuración de la base de datos
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'gym.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///gym.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True  # Mostrar queries SQL
 
 # Inicializar la base de datos
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # Configurar el sistema de login
 login_manager = LoginManager()
@@ -60,8 +59,11 @@ class Rutina(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100))
     descripcion = db.Column(db.Text)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
-    usuario = db.relationship('Usuario', backref=db.backref('rutinas_propias', lazy=True))
+    creador_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    creador = db.relationship('Usuario', backref=db.backref('rutinas_creadas', lazy=True), foreign_keys=[creador_id])
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    activa = db.Column(db.Boolean, default=True)
+    usuarios_asignados = db.relationship('Usuario', secondary=usuario_rutina, backref=db.backref('rutinas_asignadas', lazy='dynamic'))
 
 class Ejercicio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -122,7 +124,7 @@ def init_db():
                     nombre='Administrador',
                     email='admin@example.com',
                     password=generate_password_hash('admin123', method='pbkdf2:sha256'),
-                    tipo_usuario='entrenador'
+                    tipo_usuario='admin'
                 )
                 db.session.add(admin)
                 
@@ -157,29 +159,21 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-
+        
         usuario = Usuario.query.filter_by(email=email).first()
-
-        if not usuario:
-            flash('Usuario no encontrado', 'error')
-            print("❌ Usuario no encontrado")
+        
+        if not usuario or not check_password_hash(usuario.password, password):
+            flash('Email o contraseña incorrectos', 'error')
             return redirect(url_for('login'))
-
-        if not check_password_hash(usuario.password, password):
-            flash('Contraseña incorrecta', 'error')
-            print("❌ Contraseña incorrecta")
-            return redirect(url_for('login'))
-
+        
         login_user(usuario)
         flash('Inicio de sesión exitoso', 'success')
-        print(f"✅ Usuario {usuario.email} autenticado correctamente")
-
-        if usuario.tipo_usuario == 'entrenador':
+        
+        if usuario.tipo_usuario in ['admin', 'entrenador']:
             return redirect(url_for('dashboard_admin'))
         return redirect(url_for('dashboard_usuario'))
-
+    
     return render_template('login.html')
-
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -208,19 +202,20 @@ def registro():
 
     return render_template('registro.html')
 
-
 @app.route('/dashboard_usuario')
 @login_required
 def dashboard_usuario():
-    # Obtener todas las rutinas del usuario (tanto asignadas como propias)
-    rutinas_asignadas = current_user.rutinas  # Ya es una lista, no necesita .all()
-    rutinas_propias = current_user.rutinas_propias  # Esta ya es una lista
-    todas_las_rutinas = list(set(rutinas_asignadas + rutinas_propias))  # Eliminar duplicados si los hay
-    return render_template('dashboard_usuario.html', rutinas=todas_las_rutinas)
+    # Obtener todas las rutinas asignadas al usuario
+    rutinas_asignadas = current_user.rutinas_asignadas.all()
+    return render_template('dashboard_usuario.html', rutinas=rutinas_asignadas)
 
 @app.route('/dashboard_admin')
 @login_required
 def dashboard_admin():
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para acceder a esta página', 'error')
+        return redirect(url_for('dashboard_usuario'))
+    
     usuarios = Usuario.query.filter_by(tipo_usuario='usuario').all()
     rutinas = Rutina.query.all()
     
@@ -233,8 +228,16 @@ def dashboard_admin():
     }
     
     for usuario in usuarios:
-        total_ejercicios = sum(len(rutina.ejercicios) for rutina in usuario.rutinas)
+        # Obtener todas las rutinas asignadas al usuario
+        rutinas_usuario = usuario.rutinas_asignadas.all()
+        
+        # Calcular el total de ejercicios en todas las rutinas asignadas
+        total_ejercicios = sum(len(rutina.ejercicios) for rutina in rutinas_usuario)
+        
+        # Contar ejercicios completados
         ejercicios_completados = sum(1 for p in usuario.progresos if p.completado)
+        
+        # Calcular porcentaje de progreso
         porcentaje_progreso = (ejercicios_completados / total_ejercicios * 100) if total_ejercicios > 0 else 0
         
         # Clasificar el progreso
@@ -260,52 +263,42 @@ def dashboard_admin():
 @app.route('/crear_rutina', methods=['GET', 'POST'])
 @login_required
 def crear_rutina():
-    if current_user.tipo_usuario != 'entrenador':
-        return redirect(url_for('dashboard_admin'))
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para crear rutinas', 'error')
+        return redirect(url_for('dashboard_usuario'))
         
     if request.method == 'POST':
         nombre = request.form.get('nombre')
         descripcion = request.form.get('descripcion')
-        usuario_id = request.form.get('usuario_id')
         
         nueva_rutina = Rutina(
             nombre=nombre,
             descripcion=descripcion,
-            usuario_id=usuario_id if usuario_id else None
+            creador_id=current_user.id
         )
         
         db.session.add(nueva_rutina)
         db.session.commit()
         
-        # Si se seleccionó un usuario, asignar la rutina
-        if usuario_id:
-            usuario = Usuario.query.get(usuario_id)
-            if usuario:
-                usuario.rutinas.append(nueva_rutina)
-                db.session.commit()
-                flash('Rutina creada y asignada exitosamente', 'success')
-            else:
-                flash('Error al asignar la rutina al usuario', 'error')
-        else:
-            flash('Rutina creada exitosamente', 'success')
-            
-        return redirect(url_for('ver_rutina', rutina_id=nueva_rutina.id))
+        flash('Rutina creada exitosamente', 'success')
+        return redirect(url_for('gestionar_rutinas'))
         
-    usuarios = Usuario.query.filter_by(tipo_usuario='usuario').all()
-    return render_template('crear_rutina.html', usuarios=usuarios)
+    return render_template('crear_rutina.html')
 
 @app.route('/editar_rutina/<int:rutina_id>', methods=['GET', 'POST'])
 @login_required
 def editar_rutina(rutina_id):
     rutina = Rutina.query.get_or_404(rutina_id)
-    if current_user.tipo_usuario != 'entrenador':
-        return redirect(url_for('dashboard_admin'))
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para editar rutinas', 'error')
+        return redirect(url_for('dashboard_usuario'))
     
     if request.method == 'POST':
         rutina.nombre = request.form.get('nombre')
         rutina.descripcion = request.form.get('descripcion')
         db.session.commit()
-        return redirect(url_for('dashboard_admin'))
+        flash('Rutina actualizada exitosamente', 'success')
+        return redirect(url_for('gestionar_rutinas'))
     
     return render_template('editar_rutina.html', rutina=rutina)
 
@@ -313,12 +306,14 @@ def editar_rutina(rutina_id):
 @login_required
 def eliminar_rutina(rutina_id):
     rutina = Rutina.query.get_or_404(rutina_id)
-    if current_user.tipo_usuario != 'entrenador':
-        return redirect(url_for('dashboard_admin'))
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para eliminar rutinas', 'error')
+        return redirect(url_for('dashboard_usuario'))
     
     db.session.delete(rutina)
     db.session.commit()
-    return redirect(url_for('dashboard_admin'))
+    flash('Rutina eliminada exitosamente', 'success')
+    return redirect(url_for('gestionar_rutinas'))
 
 @app.route('/logout')
 @login_required
@@ -329,8 +324,9 @@ def logout():
 @app.route('/crear_ejercicio/<int:rutina_id>', methods=['GET', 'POST'])
 @login_required
 def crear_ejercicio(rutina_id):
-    if current_user.tipo_usuario != 'entrenador':
-        return redirect(url_for('dashboard_admin'))
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para crear ejercicios', 'error')
+        return redirect(url_for('dashboard_usuario'))
     
     rutina = Rutina.query.get_or_404(rutina_id)
     
@@ -359,8 +355,9 @@ def crear_ejercicio(rutina_id):
 @app.route('/editar_ejercicio/<int:ejercicio_id>', methods=['GET', 'POST'])
 @login_required
 def editar_ejercicio(ejercicio_id):
-    if current_user.tipo_usuario != 'entrenador':
-        return redirect(url_for('dashboard_admin'))
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para editar ejercicios', 'error')
+        return redirect(url_for('dashboard_usuario'))
     
     ejercicio = Ejercicio.query.get_or_404(ejercicio_id)
     
@@ -384,8 +381,9 @@ def editar_ejercicio(ejercicio_id):
 @app.route('/eliminar_ejercicio/<int:ejercicio_id>', methods=['POST'])
 @login_required
 def eliminar_ejercicio(ejercicio_id):
-    if current_user.tipo_usuario != 'entrenador':
-        return redirect(url_for('dashboard_admin'))
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para eliminar ejercicios', 'error')
+        return redirect(url_for('dashboard_usuario'))
     
     ejercicio = Ejercicio.query.get_or_404(ejercicio_id)
     rutina_id = ejercicio.rutina_id
@@ -455,31 +453,59 @@ def registrar_rm(ejercicio_id):
     
     return render_template('registrar_rm.html', ejercicio=ejercicio)
 
-@app.route('/asignar_rutina/<int:usuario_id>', methods=['GET', 'POST'])
+@app.route('/gestionar_rutinas')
 @login_required
-def asignar_rutina(usuario_id):
-    if current_user.tipo_usuario != 'entrenador':
+def gestionar_rutinas():
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para acceder a esta página', 'error')
         return redirect(url_for('dashboard_usuario'))
-        
-    usuario = Usuario.query.get_or_404(usuario_id)
+    
+    rutinas = Rutina.query.all()
+    return render_template('gestionar_rutinas.html', rutinas=rutinas)
+
+@app.route('/asignar_rutina/<int:rutina_id>', methods=['GET', 'POST'])
+@login_required
+def asignar_rutina(rutina_id):
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para realizar esta acción', 'error')
+        return redirect(url_for('dashboard_usuario'))
+    
+    rutina = Rutina.query.get_or_404(rutina_id)
+    usuarios = Usuario.query.filter_by(tipo_usuario='usuario').all()
     
     if request.method == 'POST':
-        rutina_id = request.form.get('rutina_id')
-        rutina = Rutina.query.get_or_404(rutina_id)
+        usuario_id = request.form.get('usuario_id')
+        usuario = Usuario.query.get_or_404(usuario_id)
         
-        # Verificar si la rutina ya está asignada al usuario
-        if rutina in usuario.rutinas:
-            flash('Esta rutina ya está asignada al usuario', 'error')
-        else:
-            usuario.rutinas.append(rutina)
+        if usuario not in rutina.usuarios_asignados:
+            rutina.usuarios_asignados.append(usuario)
             db.session.commit()
-            flash('Rutina asignada exitosamente', 'success')
-            
-        return redirect(url_for('ver_perfil', usuario_id=usuario_id))
+            flash(f'Rutina asignada correctamente a {usuario.nombre}', 'success')
+        else:
+            flash('El usuario ya tiene asignada esta rutina', 'warning')
+        
+        return redirect(url_for('gestionar_rutinas'))
     
-    # Obtener todas las rutinas no asignadas al usuario
-    rutinas_disponibles = Rutina.query.filter(~Rutina.usuarios.contains(usuario)).all()
-    return render_template('asignar_rutina.html', usuario=usuario, rutinas=rutinas_disponibles)
+    return render_template('asignar_rutina.html', rutina=rutina, usuarios=usuarios)
+
+@app.route('/desasignar_rutina/<int:rutina_id>/<int:usuario_id>', methods=['POST'])
+@login_required
+def desasignar_rutina(rutina_id, usuario_id):
+    if current_user.tipo_usuario not in ['admin', 'entrenador']:
+        flash('No tienes permiso para realizar esta acción', 'error')
+        return redirect(url_for('dashboard_usuario'))
+    
+    rutina = Rutina.query.get_or_404(rutina_id)
+    usuario = Usuario.query.get_or_404(usuario_id)
+    
+    if usuario in rutina.usuarios_asignados:
+        rutina.usuarios_asignados.remove(usuario)
+        db.session.commit()
+        flash(f'Rutina desasignada correctamente de {usuario.nombre}', 'success')
+    else:
+        flash('El usuario no tiene asignada esta rutina', 'warning')
+    
+    return redirect(url_for('gestionar_rutinas'))
 
 @app.route('/ver_perfil/<int:usuario_id>')
 @login_required

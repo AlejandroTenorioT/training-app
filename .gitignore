@@ -20,27 +20,30 @@ var/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Entornos virtuales
 venv/
 ENV/
-.venv/
-
-# Environment Variables
 .env
+.venv
+env/
 
-# Database
+# Base de datos
 *.db
 *.sqlite3
 
-# IDE
+# Logs
+*.log
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log 
+# Archivos de configuración local
+instance/
+config.py 

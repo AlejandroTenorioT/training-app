@@ -1,94 +1,80 @@
-# Training App
+# Gym App
 
-Aplicación web para gestión de rutinas de entrenamiento desarrollada con Flask.
+Aplicación web para gestión de rutinas de entrenamiento y seguimiento de progreso.
 
 ## Características
 
-- Sistema de autenticación de usuarios
+- Registro e inicio de sesión de usuarios
+- Diferentes tipos de usuarios (administrador, entrenador, usuario)
 - Gestión de rutinas de entrenamiento
-- Seguimiento de ejercicios
-- Panel de administración
-- Interfaz responsiva
+- Creación y asignación de ejercicios
+- Seguimiento del progreso de los usuarios
+- Estadísticas y gráficos de rendimiento
 
-## Requisitos
+## Tecnologías utilizadas
 
-- Python 3.9+
-- pip (gestor de paquetes de Python)
+- Python
+- Flask
+- SQLAlchemy
+- HTML/CSS
+- JavaScript
+- Chart.js
 
-## Instalación local
+## Instalación
 
 1. Clonar el repositorio:
-```bash
-git clone <url-del-repositorio>
-cd training-app
+```
+git clone https://github.com/tu-usuario/gym-app.git
+cd gym-app
 ```
 
-2. Crear un entorno virtual:
-```bash
-python -m venv .venv
-source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+2. Crear un entorno virtual e instalar dependencias:
 ```
-
-3. Instalar dependencias:
-```bash
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Configurar variables de entorno:
-```bash
-cp .env.example .env
-# Editar .env con tus configuraciones
+3. Configurar variables de entorno:
+Crear un archivo `.env` con las siguientes variables:
+```
+FLASK_APP=trainingapp.py
+FLASK_ENV=development
+SECRET_KEY=tu-clave-secreta
+DATABASE_URL=sqlite:///gym.db
+```
+
+4. Inicializar la base de datos:
+```
+flask db init
+flask db migrate
+flask db upgrade
 ```
 
 5. Ejecutar la aplicación:
-```bash
-python trainingapp.py
 ```
-
-## Despliegue en Render
-
-1. Crear una cuenta en [Render](https://render.com)
-2. Crear un nuevo Web Service
-3. Conectar con el repositorio de GitHub
-4. Configurar las siguientes variables de entorno:
-   - `SECRET_KEY`: Una clave secreta para la aplicación
-   - `DATABASE_URL`: URL de la base de datos (Render proporcionará una PostgreSQL)
-   - `FLASK_ENV`: production
-5. Configurar el comando de inicio:
-   ```
-   gunicorn trainingapp:app
-   ```
-6. Deploy!
-
-## Usuarios por defecto
-
-- Administrador:
-  - Email: admin@example.com
-  - Contraseña: admin123
-- Usuario normal:
-  - Email: usuario@example.com
-  - Contraseña: usuario123
+flask run
+```
 
 ## Estructura del proyecto
 
 ```
-training-app/
-├── templates/          # Plantillas HTML
-├── static/            # Archivos estáticos (CSS, JS, imágenes)
-├── trainingapp.py     # Aplicación principal
-├── requirements.txt   # Dependencias
-├── .env              # Variables de entorno (no versionado)
-└── README.md         # Este archivo
+gym-app/
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+├── templates/
+│   ├── admin/
+│   ├── auth/
+│   └── user/
+├── trainingapp.py
+├── models.py
+├── forms.py
+├── requirements.txt
+└── README.md
 ```
-
-## Contribuir
-
-1. Fork el repositorio
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles. 
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles. 

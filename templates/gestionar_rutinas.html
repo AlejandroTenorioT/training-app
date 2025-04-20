@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Rutinas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Gestión de Rutinas</h1>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="admin-actions">
+            <a href="{{ url_for('dashboard_admin') }}" class="btn btn-secondary">Volver al Dashboard</a>
+            <a href="{{ url_for('crear_rutina') }}" class="btn btn-primary">Crear Nueva Rutina</a>
+        </div>
+
+        <div class="rutinas-section">
+            <h2>Rutinas Existentes</h2>
+            <div class="rutinas-grid">
+                {% for rutina in rutinas %}
+                    <div class="rutina-card">
+                        <h3>{{ rutina.nombre }}</h3>
+                        <div class="rutina-info">
+                            <p><strong>Descripción:</strong> {{ rutina.descripcion }}</p>
+                            <p><strong>Creada por:</strong> {{ rutina.creador.nombre }}</p>
+                            <p><strong>Fecha de creación:</strong> {{ rutina.fecha_creacion.strftime('%d/%m/%Y') }}</p>
+                            <p><strong>Usuarios asignados:</strong> {{ rutina.usuarios_asignados|length }}</p>
+                        </div>
+                        <div class="rutina-actions">
+                            <a href="{{ url_for('asignar_rutina', rutina_id=rutina.id) }}" class="btn btn-primary">Asignar Usuarios</a>
+                            <a href="{{ url_for('editar_rutina', rutina_id=rutina.id) }}" class="btn btn-secondary">Editar</a>
+                            <form action="{{ url_for('eliminar_rutina', rutina_id=rutina.id) }}" method="POST" class="delete-form">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar esta rutina?')">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>No hay rutinas creadas.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 GymApp</p>
+    </footer>
+</body>
+</html> 

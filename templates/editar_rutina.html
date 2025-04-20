@@ -3,40 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - Gym App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Editar Rutina - {{ rutina.nombre }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
-        <h1>Panel de Administración</h1>
+        <h1>Editar Rutina: {{ rutina.nombre }}</h1>
     </header>
 
     <main>
-        <h2>Lista de usuarios</h2>
-        <ul>
-            {% for usuario in usuarios %}
-                <li>{{ usuario.nombre }} - {{ usuario.email }}</li>
-            {% endfor %}
-        </ul>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
-        <h2>Rutinas Asignadas</h2>
-        <ul>
-            {% for rutina in rutinas %}
-                <li>
-                    {{ rutina.nombre }} - {{ rutina.descripcion }} (Asignada a: {{ rutina.usuario.nombre }})
-                    <a href="{{ url_for('editar_rutina', rutina_id=rutina.id) }}">✏️ Editar</a>
-                    <form action="{{ url_for('eliminar_rutina', rutina_id=rutina.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" onclick="return confirm('¿Estás seguro de eliminar esta rutina?')">❌ Eliminar</button>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
+        <div class="admin-actions">
+            <a href="{{ url_for('gestionar_rutinas') }}" class="btn btn-secondary">Volver a Gestión de Rutinas</a>
+            <a href="{{ url_for('ver_rutina', rutina_id=rutina.id) }}" class="btn btn-primary">Gestionar Ejercicios</a>
+        </div>
 
-        <a href="{{ url_for('crear_rutina') }}">➕ Crear Rutina</a>
-        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        <div class="rutinas-section">
+            <h2>Editar Rutina</h2>
+            <form action="{{ url_for('editar_rutina', rutina_id=rutina.id) }}" method="POST" class="form-ejercicio">
+                <div class="form-group">
+                    <label for="nombre">Nombre de la rutina:</label>
+                    <input type="text" id="nombre" name="nombre" value="{{ rutina.nombre }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion" required>{{ rutina.descripcion }}</textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="{{ url_for('gestionar_rutinas') }}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
     </main>
+
     <footer>
-        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+        <p>&copy; 2024 GymApp</p>
     </footer>
 </body>
 </html>

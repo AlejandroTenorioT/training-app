@@ -6,6 +6,9 @@
     --background-color: #f5f6fa;
     --text-color: #2c3e50;
     --light-gray: #ecf0f1;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
+    --error-color: #e74c3c;
 }
 
 /* Estilos base */
@@ -189,5 +192,364 @@ footer {
         margin: 0.25rem 0;
         width: 100%;
         text-align: center;
+    }
+}
+
+/* Estilos para formularios */
+.form-ejercicio, .form-asignacion {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--light-gray);
+    border-radius: 4px;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.form-group textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Estilos para la gestión de rutinas */
+.rutinas-section, .rutina-info, .usuarios-asignados, .asignar-nuevo {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.rutinas-section h2, .rutina-info h2, .usuarios-asignados h2, .asignar-nuevo h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.rutinas-grid, .usuarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.rutina-card, .usuario-card {
+    background-color: var(--background-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.rutina-card:hover, .usuario-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.rutina-card h3, .usuario-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.rutina-info p, .usuario-card p {
+    margin: 0.5rem 0;
+    color: var(--text-color);
+}
+
+.rutina-info strong, .usuario-card strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.rutina-actions, .usuario-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.delete-form {
+    display: inline;
+}
+
+/* Estilos para botones */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-secondary {
+    background-color: var(--light-gray);
+    color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background-color: #bdc3c7;
+}
+
+.btn-danger {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* Estilos para mensajes flash */
+.flashes {
+    margin: 1rem 0;
+}
+
+.flashes div {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.error {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.warning {
+    background-color: var(--warning-color);
+    color: var(--text-color);
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+    .form-ejercicio, .form-asignacion {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .rutinas-grid, .usuarios-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .rutina-actions, .usuario-actions, .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Estilos para la asignación de usuarios */
+.usuarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.usuario-card {
+    background-color: var(--background-color);
+    padding: 1rem;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-asignacion select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--light-gray);
+    border-radius: 4px;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* Estilos para el dashboard del administrador */
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.admin-actions .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.filtros-section {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filtros-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.filtro-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filtro-select {
+    padding: 0.75rem;
+    border: 1px solid var(--light-gray);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.estadisticas-section {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.estadisticas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.estadistica-card {
+    background-color: var(--background-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    min-height: 300px;
+}
+
+.usuarios-section {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progreso-resumen {
+    margin-top: 1rem;
+}
+
+.progreso-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.etiqueta {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.valor {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.rutinas-usuario {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--light-gray);
+}
+
+.rutinas-usuario h4 {
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.rutinas-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rutinas-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.rutinas-list li:last-child {
+    border-bottom: none;
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+    main {
+        padding: 1rem;
+    }
+    
+    .admin-actions {
+        flex-direction: column;
+    }
+    
+    .estadisticas-grid,
+    .usuarios-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .estadistica-card {
+        min-height: 250px;
     }
 } 
