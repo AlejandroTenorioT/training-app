@@ -87,34 +87,19 @@
                                 {% if current_user.tipo_usuario != 'entrenador' %}
                                     <div class="progreso-ejercicio">
                                         <form action="{{ url_for('marcar_ejercicio', ejercicio_id=ejercicio.id) }}" method="POST" class="form-progreso">
-                                            <div class="estado-ejercicio">
-                                                <label class="checkbox-container">
-                                                    <input type="checkbox" name="completado" value="true" 
-                                                           {% if ejercicio.id in progresos and progresos[ejercicio.id].completado %}checked{% endif %}
-                                                           onchange="this.form.submit()">
-                                                    <span class="checkmark"></span>
-                                                    <span class="estado-texto">
-                                                        {% if ejercicio.id in progresos and progresos[ejercicio.id].completado %}
-                                                            Ejercicio completado
-                                                        {% else %}
-                                                            Marcar como completado
-                                                        {% endif %}
-                                                    </span>
-                                                </label>
-                                            </div>
                                             <div class="form-group">
                                                 <label for="repeticiones_realizadas">Repeticiones realizadas:</label>
                                                 <input type="number" name="repeticiones_realizadas" min="0" 
                                                        value="{{ progresos[ejercicio.id].repeticiones_realizadas if ejercicio.id in progresos else '' }}"
-                                                       placeholder="¿Cuántas reps lograste?">
+                                                       placeholder="¿Cuántas reps lograste?" required>
                                             </div>
                                             <div class="notas-ejercicio">
                                                 <textarea name="notas" placeholder="Agregar notas (opcional)">{{ progresos[ejercicio.id].notas if ejercicio.id in progresos else '' }}</textarea>
-                                                <button type="submit" class="btn btn-secondary">Guardar progreso</button>
+                                                <button type="submit" class="btn btn-primary">Guardar progreso</button>
                                             </div>
                                         </form>
                                         <div class="acciones-rm">
-                                            <a href="{{ url_for('registrar_rm', ejercicio_id=ejercicio.id) }}" class="btn btn-primary">
+                                            <a href="{{ url_for('registrar_rm', ejercicio_id=ejercicio.id) }}" class="btn btn-secondary">
                                                 Registrar RM
                                             </a>
                                         </div>

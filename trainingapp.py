@@ -405,10 +405,6 @@ def ver_rutina(rutina_id):
 @login_required
 def marcar_ejercicio(ejercicio_id):
     ejercicio = Ejercicio.query.get_or_404(ejercicio_id)
-    completado = request.form.get('completado') == 'true'
-    notas = request.form.get('notas', '')
-
-    # Buscar o crear el progreso del ejercicio
     progreso = ProgresoEjercicio.query.filter_by(
         usuario_id=current_user.id,
         ejercicio_id=ejercicio_id
@@ -421,17 +417,14 @@ def marcar_ejercicio(ejercicio_id):
         )
         db.session.add(progreso)
 
-    progreso.completado = completado
-    progreso.fecha_completado = datetime.now() if completado else None
-    progreso.notas = notas
+    # Actualizar el progreso
+    progreso.repeticiones_realizadas = request.form.get('repeticiones_realizadas', type=int)
+    progreso.notas = request.form.get('notas', '')
+    progreso.completado = True  # El ejercicio se marca como completado automáticamente
+    progreso.fecha_completado = datetime.utcnow()
 
     db.session.commit()
-
-    if completado:
-        flash('¡Ejercicio marcado como completado!', 'success')
-    else:
-        flash('Ejercicio marcado como no completado', 'info')
-    
+    flash('Progreso guardado correctamente', 'success')
     return redirect(url_for('ver_rutina', rutina_id=ejercicio.rutina_id))
 
 @app.route('/registrar_rm/<int:ejercicio_id>', methods=['GET', 'POST'])
