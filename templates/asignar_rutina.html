@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignar Rutina - {{ usuario.nombre }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Asignar Rutina a {{ usuario.nombre }}</h1>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <div class="navegacion">
+            <a href="{{ url_for('ver_perfil', usuario_id=usuario.id) }}" class="btn btn-secondary">
+                Volver al Perfil
+            </a>
+        </div>
+
+        {% if rutinas %}
+            <form action="{{ url_for('asignar_rutina', usuario_id=usuario.id) }}" method="POST" class="form-asignar">
+                <div class="form-group">
+                    <label for="rutina_id">Seleccionar rutina:</label>
+                    <select id="rutina_id" name="rutina_id" required>
+                        <option value="">Selecciona una rutina</option>
+                        {% for rutina in rutinas %}
+                            <option value="{{ rutina.id }}">{{ rutina.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Asignar Rutina</button>
+                </div>
+            </form>
+        {% else %}
+            <p class="mensaje">No hay rutinas disponibles para asignar.</p>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html> 

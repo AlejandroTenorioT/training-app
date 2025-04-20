@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de {{ usuario.nombre }} - Gym App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Perfil de {{ usuario.nombre }}</h1>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <div class="navegacion">
+            <a href="{{ url_for('dashboard_admin') }}" class="btn btn-secondary">
+                Volver al Dashboard
+            </a>
+        </div>
+
+        <div class="perfil-info">
+            <h2>Información del Usuario</h2>
+            <div class="usuario-detalles">
+                <div class="detalle">
+                    <span class="etiqueta">Nombre:</span>
+                    <span class="valor">{{ usuario.nombre }}</span>
+                </div>
+                <div class="detalle">
+                    <span class="etiqueta">Email:</span>
+                    <span class="valor">{{ usuario.email }}</span>
+                </div>
+                <div class="detalle">
+                    <span class="etiqueta">Peso:</span>
+                    <span class="valor">{{ usuario.peso }} kg</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="rutinas-asignadas">
+            <h2>Rutinas Asignadas</h2>
+            {% if usuario.rutinas %}
+                <div class="rutinas-grid">
+                    {% for rutina in usuario.rutinas %}
+                        <div class="rutina-card">
+                            <h3>{{ rutina.nombre }}</h3>
+                            <p class="descripcion">{{ rutina.descripcion }}</p>
+                            <div class="acciones">
+                                <a href="{{ url_for('ver_rutina', rutina_id=rutina.id) }}" class="btn btn-primary">
+                                    Ver Rutina
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="mensaje">No hay rutinas asignadas.</p>
+            {% endif %}
+
+            {% if current_user.tipo_usuario == 'entrenador' %}
+                <div class="acciones">
+                    <a href="{{ url_for('asignar_rutina', usuario_id=usuario.id) }}" class="btn btn-primary">
+                        Asignar Nueva Rutina
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; ATT 2025 Gym App. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html> 

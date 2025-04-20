@@ -60,7 +60,7 @@ class Rutina(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100))
     descripcion = db.Column(db.Text)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=True)
     usuario = db.relationship('Usuario', backref=db.backref('rutinas_propias', lazy=True))
 
 class Ejercicio(db.Model):
@@ -271,22 +271,25 @@ def crear_rutina():
         nueva_rutina = Rutina(
             nombre=nombre,
             descripcion=descripcion,
-            usuario_id=usuario_id
+            usuario_id=usuario_id if usuario_id else None
         )
         
         db.session.add(nueva_rutina)
         db.session.commit()
         
-        # Asignar la rutina al usuario seleccionado
-        usuario = Usuario.query.get(usuario_id)
-        if usuario:
-            usuario.rutinas.append(nueva_rutina)
-            db.session.commit()
-            flash('Rutina creada y asignada exitosamente', 'success')
-            return redirect(url_for('ver_rutina', rutina_id=nueva_rutina.id))
+        # Si se seleccionó un usuario, asignar la rutina
+        if usuario_id:
+            usuario = Usuario.query.get(usuario_id)
+            if usuario:
+                usuario.rutinas.append(nueva_rutina)
+                db.session.commit()
+                flash('Rutina creada y asignada exitosamente', 'success')
+            else:
+                flash('Error al asignar la rutina al usuario', 'error')
         else:
-            flash('Error al asignar la rutina al usuario', 'error')
-            return redirect(url_for('dashboard_admin'))
+            flash('Rutina creada exitosamente', 'success')
+            
+        return redirect(url_for('ver_rutina', rutina_id=nueva_rutina.id))
         
     usuarios = Usuario.query.filter_by(tipo_usuario='usuario').all()
     return render_template('crear_rutina.html', usuarios=usuarios)
@@ -451,6 +454,38 @@ def registrar_rm(ejercicio_id):
         return redirect(url_for('ver_rutina', rutina_id=ejercicio.rutina_id))
     
     return render_template('registrar_rm.html', ejercicio=ejercicio)
+
+@app.route('/asignar_rutina/<int:usuario_id>', methods=['GET', 'POST'])
+@login_required
+def asignar_rutina(usuario_id):
+    if current_user.tipo_usuario != 'entrenador':
+        return redirect(url_for('dashboard_usuario'))
+        
+    usuario = Usuario.query.get_or_404(usuario_id)
+    
+    if request.method == 'POST':
+        rutina_id = request.form.get('rutina_id')
+        rutina = Rutina.query.get_or_404(rutina_id)
+        
+        # Verificar si la rutina ya está asignada al usuario
+        if rutina in usuario.rutinas:
+            flash('Esta rutina ya está asignada al usuario', 'error')
+        else:
+            usuario.rutinas.append(rutina)
+            db.session.commit()
+            flash('Rutina asignada exitosamente', 'success')
+            
+        return redirect(url_for('ver_perfil', usuario_id=usuario_id))
+    
+    # Obtener todas las rutinas no asignadas al usuario
+    rutinas_disponibles = Rutina.query.filter(~Rutina.usuarios.contains(usuario)).all()
+    return render_template('asignar_rutina.html', usuario=usuario, rutinas=rutinas_disponibles)
+
+@app.route('/ver_perfil/<int:usuario_id>')
+@login_required
+def ver_perfil(usuario_id):
+    usuario = Usuario.query.get_or_404(usuario_id)
+    return render_template('ver_perfil.html', usuario=usuario)
 
 if __name__ == '__main__':
     # Obtener el puerto del entorno o usar 5000 por defecto
